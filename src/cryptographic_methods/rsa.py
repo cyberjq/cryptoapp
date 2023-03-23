@@ -10,10 +10,10 @@ def get_keys(p: int = None, q: int = None) -> tuple[tuple[int, int], tuple[int, 
             q = prime_numbers[random.randint(0, len(prime_numbers) - 1)]
 
     n = p * q
-    f = (p - 1) * (q - 1)
+    f = (p - 1) * (q - 1)  # Функция Эйлера
 
-    e = _get_e(f)
-    d = _get_d(e, f)
+    e = _get_e(f)  # Открытая экспонента
+    d = _get_d(e, f)  # Секретная экспонента
 
     public_key = (e, n)
     private_key = (d, n)
@@ -79,6 +79,9 @@ def _get_e(f: int) -> int:
 
 
 def encrypt(text: str, public_key: tuple[int, int], codec: str = "cp1251") -> str:
+    """
+    :param public_key: (e, n)
+    """
     encrypt_text = ""
     for symbol in text.encode(codec):
         encrypt_text += f"{_fast_mul(symbol, public_key[0], public_key[1])}".zfill(7)
@@ -87,6 +90,9 @@ def encrypt(text: str, public_key: tuple[int, int], codec: str = "cp1251") -> st
 
 
 def decrypt(encrypt_text: str, private_key: tuple[int, int], codec: str = "cp1251") -> str:
+    """
+        :param public_key: (d, n)
+    """
     n = 7
     _bytes = []
     for i in range(0, len(encrypt_text), n):

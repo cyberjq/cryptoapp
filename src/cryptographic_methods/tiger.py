@@ -35,6 +35,15 @@ def _pass(a, b, c, mul, mystr):
 
 
 def _compress(text_bytes: array.array, res: list[int]) -> None:
+    """
+    save_abc
+    pass(a, b, c,5)
+    key_schedule
+    pass(c, a, b,7)
+    key_schedule
+    pass(b, c, a,9)
+    feedforward
+    """
     # setup
     a = res[0]
     b = res[1]
@@ -42,15 +51,20 @@ def _compress(text_bytes: array.array, res: list[int]) -> None:
 
     x = []
 
+    # по 64 бита
     for j in range(0, 8):
         x.append(struct.unpack('Q', text_bytes[j * 8:j * 8 + 8])[0])
 
-    # compress
+    # save_abc
     aa = a
     bb = b
     cc = c
     allf = 0xFFFFFFFFFFFFFFFF
+
     for i in range(0, 3):
+        # key_schedule генерация ключей, обратимая функция, которая отвечает за то,
+        # чтобы изменение небольшого числа бит сообщения x вызвало изменение большого числа бит
+        # на следующем выполнении pass:
         if i != 0:
             x[0] = (x[0] - (x[7] ^ 0xA5A5A5A5A5A5A5A5) & allf) & allf
             x[1] ^= x[0]
@@ -69,6 +83,7 @@ def _compress(text_bytes: array.array, res: list[int]) -> None:
             x[6] = (x[6] + x[5]) & allf
             x[7] = (x[7] - (x[6] ^ 0x0123456789ABCDEF) & allf) & allf
 
+        # pass(a, b, c, ...)
         if i == 0:
             a, b, c = _pass(a, b, c, 5, x)
         elif i == 1:
@@ -78,6 +93,7 @@ def _compress(text_bytes: array.array, res: list[int]) -> None:
 
         a, c, b = c, b, a
 
+    #feedforward
     a ^= aa
     b = (b - bb) & allf
     c = (c + cc) & allf
@@ -96,6 +112,7 @@ def hash(text: str) -> str:
     text_bytes = array.array('B')
     text_bytes.frombytes(text[i:].encode())
 
+    # Если текст из нескольких блоков по 512 бит
     while i < text_len - 63:
         _compress(text_bytes[i: i + 64], res)
         i += 64
